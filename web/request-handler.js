@@ -7,7 +7,7 @@ var httpHelper = require('./http-helpers');
 
 var writeFile = function(req, res) {
     // var file = fs.createWriteStream('www.google.com.html');
-  var filename = `${req.url.substring(1)}.html`;
+  var filename = req.url.substring(1);
   var pathname = path.join(__dirname, `./archives/sites/${filename}`);
   var request = http.get(`http:/${req.url}`, function(response) {
     var statusCode = response.statusCode; 

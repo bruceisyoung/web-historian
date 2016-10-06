@@ -1,4 +1,5 @@
 var fs = require('fs');
+var http = require('http');
 var path = require('path');
 var _ = require('underscore');
 
@@ -43,6 +44,7 @@ exports.addUrlToList = function(addURL, callback) {
   exports.isUrlInList(addURL, function(exists) {
     if (!exists) {
       fs.appendFile(exports.paths.list, `${addURL}\n`, function() {
+        //TODO: FIGURE OUT `${addURL}\n`
         exports.isUrlInList(addURL, function(exists) {
         });
         return callback();
@@ -52,10 +54,28 @@ exports.addUrlToList = function(addURL, callback) {
 
 };
 
-exports.isUrlArchived = function() {
-  
+exports.isUrlArchived = function(testURL, callback) {
+  fs.access(`${exports.paths.archivedSites}/${testURL}`, fs.F_OK, function(err) {
+    return callback(err == null);
+  });
 };
 
-exports.downloadUrls = function() {
-
+exports.downloadUrls = function(urlArray) {
+  urlArray.forEach(function(url) {
+    var pathname = path.join(exports.paths.archivedSites, `/${url}`);
+    console.log(pathname);
+    var request = http.get(`http://${url}`, function(response) {
+      var statusCode = response.statusCode; 
+      if (statusCode === 200) {
+        var file = fs.createWriteStream(pathname);
+        response.pipe(file);
+        response.on('end', function() {
+          file.end();
+        });
+      }
+    });
+    request.on('error', function(error) {
+      console.log('download webpage failed', url);
+    });
+  });
 };

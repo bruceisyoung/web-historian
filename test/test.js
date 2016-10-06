@@ -149,6 +149,7 @@ describe('archive helpers', function() {
 
       // Ugly hack to wait for all downloads to finish.
       setTimeout(function () {
+        console.log('Expected;', fs.readdirSync(archive.paths.archivedSites));
         expect(fs.readdirSync(archive.paths.archivedSites)).to.deep.equal(urlArray);
         done();
       }, 500);
