@@ -9,23 +9,50 @@ var writeFile = function(req, res) {
     // var file = fs.createWriteStream('www.google.com.html');
   var filename = `${req.url.substring(1)}.html`;
   var pathname = path.join(__dirname, `./archives/sites/${filename}`);
-  var file = fs.createWriteStream(pathname);
   var request = http.get(`http:/${req.url}`, function(response) {
-    response.pipe(file);
-    response.on('end', function() {
-      file.end();
-      httpHelper.serveAssets(res, {path: pathname, contentType: 'text/html'});
-    });
+    var statusCode = response.statusCode; 
+    if (statusCode === 200) {
+      var file = fs.createWriteStream(pathname);
+      response.pipe(file);
+      response.on('end', function() {
+        file.end();
+        httpHelper.serveAssets(res, {path: pathname, contentType: 'text/html', statusCode: 200});
+      });
+    }
+  });
+  request.on('error', function(error) {
+    res.writeHead(404, {contentType: 'text/plain'});
+    res.end('Webpage Not Found!');
   });
 };
 
 
 exports.handleRequest = function (req, res) {
   console.log('serving', req.url, 'method:', req.method);
-  if (req.url === '/') {
-    httpHelper.serveAssets(res, {path: path.join(__dirname, '/public/index.html'), contentType: 'text/html'});
-  } else if (req.url === '/styles.css') {
-    httpHelper.serveAssets(res, {path: path.join(__dirname, '/public/styles.css'), contentType: 'text/css'});
+  if (req.url === '/' && req.method === 'GET') {
+    httpHelper.serveAssets(res, {path: path.join(__dirname, '/public/index.html'), contentType: 'text/html', statusCode: 200});
+  } else if (req.url === '/styles.css' && req.method === 'GET') {
+    httpHelper.serveAssets(res, {path: path.join(__dirname, '/public/styles.css'), contentType: 'text/css', statusCode: 200});
+  } else if (req.method === 'POST') {
+    //TODO://
+
+    var body = '';
+    var urlToSaved;
+    req.on('data', function(chunk) {      
+      body += chunk.toString();
+    });
+    req.on('end', function() {
+      urlToSaved = body.split('=')[1];
+      console.log(urlToSaved);
+      console.log(archive.paths.list);
+      // console.log('Path name:', pathname);
+      fs.appendFile(archive.paths.list, `${urlToSaved}\n`, function() {
+        console.log('I am here');
+        // console.log(pathname, `${urlToSaved}\n`);
+        httpHelper.serveAssets(res, {path: archive.paths.list, contentType: 'text/html', statusCode: 302});
+      });
+    });
+
   } else {
     writeFile(req, res);
   }

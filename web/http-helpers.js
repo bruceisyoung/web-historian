@@ -19,7 +19,7 @@ exports.serveAssets = function(res, asset, callback) {
     if (error) {
       console.log('Error:', error);
     } else {
-      res.writeHead(200, {contentType: asset.contentType});
+      res.writeHead(asset.statusCode, {contentType: asset.contentType});
       // console.log(content.toString());
       res.end(content, 'utf-8');
     }
