@@ -34,7 +34,6 @@ exports.handleRequest = function (req, res) {
   } else if (req.url === '/styles.css' && req.method === 'GET') {
     httpHelper.serveAssets(res, {path: path.join(__dirname, '/public/styles.css'), contentType: 'text/css', statusCode: 200});
   } else if (req.method === 'POST') {
-    //TODO://
 
     var body = '';
     var urlToSaved;
@@ -43,12 +42,7 @@ exports.handleRequest = function (req, res) {
     });
     req.on('end', function() {
       urlToSaved = body.split('=')[1];
-      console.log(urlToSaved);
-      console.log(archive.paths.list);
-      // console.log('Path name:', pathname);
       fs.appendFile(archive.paths.list, `${urlToSaved}\n`, function() {
-        console.log('I am here');
-        // console.log(pathname, `${urlToSaved}\n`);
         httpHelper.serveAssets(res, {path: archive.paths.list, contentType: 'text/html', statusCode: 302});
       });
     });
