@@ -1,5 +1,5 @@
 var fs = require('fs');
-
+var htmlfetcher = require('../workers/htmlfetcher.js');
 // Sync is ok here because this is called just once on startup.
 module.exports = function (basePath) {
   // if the archive folder doesn't exist, create it.
@@ -21,3 +21,9 @@ module.exports = function (basePath) {
     fs.mkdirSync(basePath + '/sites');
   }
 };
+
+var CronJob = require('cron').CronJob;
+new CronJob('*/1 * * * *', function() {
+  htmlfetcher.fetchHTML();
+  console.log('Ran succesfully!');
+}, null, true, 'America/Los_Angeles');

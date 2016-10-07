@@ -4,7 +4,6 @@ var path = require('path');
 var archive = require('../helpers/archive-helpers');
 var httpHelper = require('./http-helpers');
 // require more modules/folders here!
-exports.urlArray = []; 
 
 var writeFile = function(req, res) {
     // var file = fs.createWriteStream('www.google.com.html');
@@ -36,22 +35,30 @@ exports.handleRequest = function (req, res) {
   } else if (req.url === '/styles.css' && req.method === 'GET') {
     httpHelper.serveAssets(res, {path: path.join(archive.paths.siteAssets, '/styles.css'), contentType: 'text/css', statusCode: 200});
   } else if (req.method === 'POST') {
-
+    
     var body = '';
     var urlToSaved;
     req.on('data', function(chunk) {      
       body += chunk.toString();
     });
-    req.on('end', function() {
+    req.on('end', function() {      
       urlToSaved = body.split('=')[1];
       console.log(urlToSaved);
 
       archive.isUrlArchived(urlToSaved, function(exist) {
         if (exist) {
           httpHelper.serveAssets(res, {path: path.join(archive.paths.archivedSites, `/${urlToSaved}`), contentType: 'text/html', statusCode: 200});
-        } else {
-          httpHelper.serveAssets(res, {path: path.join(archive.paths.siteAssets, '/loading.html'), contentType: 'text/html', statusCode: 302});
-          exports.urlArray.push(urlToSaved);
+        } else {      
+          archive.isUrlInList(urlToSaved, function(urlStored) {
+            if (!urlStored) {
+              archive.addUrlToList(urlToSaved, function() {
+                httpHelper.serveAssets(res, {path: path.join(archive.paths.siteAssets, '/loading.html'), contentType: 'text/html', statusCode: 302});
+              });
+            } else {
+              httpHelper.serveAssets(res, {path: path.join(archive.paths.siteAssets, '/loading.html'), contentType: 'text/html', statusCode: 302});
+            }
+
+          });
         }
       }); 
     });
