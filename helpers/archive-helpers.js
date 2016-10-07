@@ -36,7 +36,9 @@ exports.readListOfUrls = function(callback) {
 
 exports.isUrlInList = function(testURL, callback) {
   exports.readListOfUrls(function(urls) {
-    return callback(urls.indexOf(testURL) !== -1);
+    if (callback) {
+      return callback(urls.indexOf(testURL) !== -1);
+    }
   });
 };
 
@@ -47,7 +49,9 @@ exports.addUrlToList = function(addURL, callback) {
         //TODO: FIGURE OUT `${addURL}\n`
         exports.isUrlInList(addURL, function(exists) {
         });
-        return callback();
+        if (callback) {
+          return callback();
+        }
       });
     }
   });
@@ -56,21 +60,24 @@ exports.addUrlToList = function(addURL, callback) {
 
 exports.isUrlArchived = function(testURL, callback) {
   fs.access(`${exports.paths.archivedSites}/${testURL}`, fs.F_OK, function(err) {
-    return callback(err == null);
+    if (callback) {
+      callback(err == null);
+    }
   });
 };
 
-exports.downloadUrls = function(urlArray) {
+exports.downloadUrls = function(urlArray, callback) {
   urlArray.forEach(function(url) {
     var pathname = path.join(exports.paths.archivedSites, `/${url}`);
-    console.log(pathname);
     var request = http.get(`http://${url}`, function(response) {
       var statusCode = response.statusCode; 
+      console.log('url', url, 'statusCode', statusCode);
       if (statusCode === 200) {
         var file = fs.createWriteStream(pathname);
         response.pipe(file);
         response.on('end', function() {
           file.end();
+          exports.addUrlToList(url);
         });
       }
     });
